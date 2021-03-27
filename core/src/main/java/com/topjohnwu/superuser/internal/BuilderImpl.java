@@ -31,6 +31,7 @@ import static com.topjohnwu.superuser.Shell.FLAG_MOUNT_MASTER;
 import static com.topjohnwu.superuser.Shell.FLAG_NON_ROOT_SHELL;
 import static com.topjohnwu.superuser.Shell.FLAG_REDIRECT_STDERR;
 import static com.topjohnwu.superuser.Shell.ROOT_SHELL;
+import static com.topjohnwu.superuser.Shell.SHELL_CMDS;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public class BuilderImpl extends Shell.Builder {
@@ -60,6 +61,21 @@ public class BuilderImpl extends Shell.Builder {
                 if (shell.getStatus() != ROOT_SHELL)
                     shell = null;
             } catch (NoShellException ignore) {}
+        }
+
+        // Try user defined shell
+        if (shell == null && SHELL_CMDS != null) {
+            for (String[] shellCmd : Shell.SHELL_CMDS) {
+                if (shellCmd == null) {
+                    continue;
+                }
+                shell = build(shellCmd);
+                if (!hasFlags(FLAG_NON_ROOT_SHELL) && shell.getStatus() != ROOT_SHELL) {
+                    shell = null;
+                } else {
+                    return shell;
+                }
+            }
         }
 
         // Try normal non-root shell

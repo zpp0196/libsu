@@ -95,6 +95,8 @@ public abstract class Shell implements Closeable {
      */
     public static final int FLAG_MOUNT_MASTER = (1 << 1);
 
+    public static String[][] SHELL_CMDS;
+
     /* Preserve (1 << 2) due to historical reasons */
 
     /**
