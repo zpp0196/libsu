@@ -1,4 +1,10 @@
 ## 3.1.1
+
+### New Features
+
+- Allow user to customize shell cmds
+
+## 3.1.1
 #### Bug fixes
 - Fix typo in `SuFile.length()`
 - Escape filenames of the `File` argument in `SuFile.renameTo(File)`
