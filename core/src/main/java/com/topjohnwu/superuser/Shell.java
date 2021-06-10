@@ -312,6 +312,8 @@ public abstract class Shell implements Closeable {
     @NonNull
     public abstract Job newJob();
 
+    public abstract String[] getCommands();
+
     /**
      * Get the status of the shell.
      * @return the status of the shell.
