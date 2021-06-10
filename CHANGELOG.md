@@ -1,12 +1,13 @@
-## 3.1.2
-#### Bug fixes
-- Properly escape file names in FIFO I/O streams
-
-## 3.1.1
+## 3.1.2.p1
 
 ### New Features
 
 - Allow user to customize shell cmds
+- Add get shell commands api
+
+## 3.1.2
+#### Bug fixes
+- Properly escape file names in FIFO I/O streams
 
 ## 3.1.1
 #### Bug fixes
