@@ -69,12 +69,14 @@ public class BuilderImpl extends Shell.Builder {
                 if (shellCmd == null) {
                     continue;
                 }
-                shell = build(shellCmd);
-                if (!hasFlags(FLAG_NON_ROOT_SHELL) && shell.getStatus() != ROOT_SHELL) {
-                    shell = null;
-                } else {
-                    return shell;
-                }
+                try {
+                    shell = build(shellCmd);
+                    if (!hasFlags(FLAG_NON_ROOT_SHELL) && shell.getStatus() != ROOT_SHELL) {
+                        shell = null;
+                    } else {
+                        return shell;
+                    }
+                } catch (NoShellException ignored) {}
             }
         }
 
