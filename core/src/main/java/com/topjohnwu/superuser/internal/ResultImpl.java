@@ -49,11 +49,15 @@ class ResultImpl extends Shell.Result {
     }
 
     void callback(Executor executor, Shell.ResultCallback cb) {
+        callback(this, executor, cb);
+    }
+
+    static void callback(Shell.Result result, Executor executor, Shell.ResultCallback cb) {
         if (cb != null) {
             if (executor == null)
-                cb.onResult(this);
+                cb.onResult(result);
             else
-                executor.execute(() -> cb.onResult(this));
+                executor.execute(() -> cb.onResult(result));
         }
     }
 }

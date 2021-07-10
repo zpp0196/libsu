@@ -19,6 +19,7 @@ package com.topjohnwu.superuser.internal;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.topjohnwu.superuser.Shell;
 import com.topjohnwu.superuser.ShellUtils;
@@ -32,6 +33,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -51,8 +53,7 @@ class ShellImpl extends Shell {
 
     private int status;
 
-    final ExecutorService executor;
-    final boolean redirect;
+    private final ExecutorService executor;
     private final String[] commands;
     private final Process process;
     private final NoCloseOutputStream STDIN;
@@ -94,9 +95,9 @@ class ShellImpl extends Shell {
         }
     }
 
-    ShellImpl(long timeout, boolean redirect, String... cmd) throws IOException {
+    ShellImpl(long timeout, int flags, String... cmd) throws IOException {
+        super(flags);
         status = UNKNOWN;
-        this.redirect = redirect;
         this.commands = cmd;
 
         Utils.log(TAG, "exec " + TextUtils.join(" ", cmd));
@@ -234,6 +235,12 @@ class ShellImpl extends Shell {
         }
 
         task.run(STDIN, STDOUT, STDERR);
+    }
+
+    @Override
+    public void submitJob(@NonNull Shell.Job job, @Nullable Executor executor,
+            @Nullable Shell.ResultCallback cb) {
+        this.executor.execute(() -> ResultImpl.callback(job.exec(), executor, cb));
     }
 
     @NonNull

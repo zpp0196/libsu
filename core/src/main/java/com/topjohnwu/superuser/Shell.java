@@ -280,6 +280,16 @@ public abstract class Shell implements Closeable {
      * Non-static APIs
      * ****************/
 
+    protected int flags;
+
+    protected Shell(int flags) {
+        this.flags = flags;
+    }
+
+    public boolean hasFlags(int flags) {
+        return (this.flags & flags) == flags;
+    }
+
     /**
      * Return whether the shell is still alive.
      * @return {@code true} if the shell is still alive.
@@ -300,6 +310,9 @@ public abstract class Shell implements Closeable {
      * @throws IOException I/O errors when doing operations with STDIN/STDOUT/STDERR
      */
     public abstract void execTask(@NonNull Task task) throws IOException;
+
+    public abstract void submitJob(@NonNull Job job, @Nullable Executor executor,
+            @Nullable ResultCallback cb);
 
     /**
      * Construct a new {@link Job} that uses the shell for execution.

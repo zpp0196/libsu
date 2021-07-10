@@ -33,17 +33,17 @@ class JobImpl extends Shell.Job implements Closeable {
 
     protected List<String> out, err;
     private final List<ShellInputSource> sources = new ArrayList<>();
-    protected ShellImpl shell;
+    protected Shell shell;
     private boolean stderrSet = false;
 
     JobImpl() {}
 
-    JobImpl(ShellImpl s) {
+    JobImpl(Shell s) {
         shell = s;
     }
 
     private ResultImpl exec0() {
-        boolean redirect = !stderrSet && shell.redirect;
+        boolean redirect = !stderrSet && shell.hasFlags(Shell.FLAG_REDIRECT_STDERR);
         if (redirect)
             err = out;
 
@@ -83,7 +83,7 @@ class JobImpl extends Shell.Job implements Closeable {
 
     @Override
     public void submit(@Nullable Executor executor, @Nullable Shell.ResultCallback cb) {
-        shell.executor.execute(() -> exec0().callback(executor, cb));
+        shell.submitJob(this, executor, cb);
     }
 
     @NonNull

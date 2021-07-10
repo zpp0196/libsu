@@ -70,7 +70,7 @@ class PendingJob extends JobImpl {
             }
             if (out instanceof NOPList)
                 out = (cb == null) ? null : new ArrayList<>();
-            shell = (ShellImpl) s;
+            shell = s;
             super.submit(executor, res -> {
                 if (retry && res == ResultImpl.SHELL_ERR) {
                     // The cached shell is terminated, try to re-schedule this task

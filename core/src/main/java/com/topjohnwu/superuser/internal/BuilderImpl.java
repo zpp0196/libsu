@@ -29,7 +29,6 @@ import java.lang.reflect.Constructor;
 
 import static com.topjohnwu.superuser.Shell.FLAG_MOUNT_MASTER;
 import static com.topjohnwu.superuser.Shell.FLAG_NON_ROOT_SHELL;
-import static com.topjohnwu.superuser.Shell.FLAG_REDIRECT_STDERR;
 import static com.topjohnwu.superuser.Shell.ROOT_SHELL;
 import static com.topjohnwu.superuser.Shell.SHELL_CMDS;
 
@@ -92,7 +91,7 @@ public class BuilderImpl extends Shell.Builder {
     public ShellImpl build(String... commands) {
         ShellImpl shell;
         try {
-            shell = new ShellImpl(timeout, hasFlags(FLAG_REDIRECT_STDERR), commands);
+            shell = new ShellImpl(timeout, flags, commands);
         } catch (IOException e) {
             Utils.ex(e);
             throw new NoShellException("Unable to create a shell!", e);

@@ -31,13 +31,13 @@ import static com.topjohnwu.superuser.Shell.GetShellCallback;
 public final class MainShell {
 
     private static boolean isInitMain;
-    private static ShellImpl mainShell;
-    private static BuilderImpl defaultBuilder;
+    private static Shell mainShell;
+    private static Shell.Builder defaultBuilder;
 
     private MainShell() {}
 
-    public static synchronized ShellImpl get() {
-        ShellImpl shell = getCached();
+    public static synchronized Shell get() {
+        Shell shell = getCached();
         if (shell == null) {
             isInitMain = true;
             shell = getBuilder().build();
@@ -75,22 +75,22 @@ public final class MainShell {
         }
     }
 
-    public static synchronized ShellImpl getCached() {
+    public static synchronized Shell getCached() {
         if (mainShell != null && mainShell.getStatus() < 0)
             mainShell = null;
         return mainShell;
     }
 
-    static synchronized void set(ShellImpl shell) {
+    static synchronized void set(Shell shell) {
         if (isInitMain)
             mainShell = shell;
     }
 
     public static synchronized void setBuilder(Shell.Builder builder) {
-        defaultBuilder = (BuilderImpl) builder;
+        defaultBuilder = builder;
     }
 
-    private static BuilderImpl getBuilder() {
+    private static Shell.Builder getBuilder() {
         if (defaultBuilder == null)
             defaultBuilder = new BuilderImpl();
         return defaultBuilder;
