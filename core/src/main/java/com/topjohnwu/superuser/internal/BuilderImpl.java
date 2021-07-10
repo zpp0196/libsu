@@ -25,93 +25,44 @@ import com.topjohnwu.superuser.NoShellException;
 import com.topjohnwu.superuser.Shell;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-
-import static com.topjohnwu.superuser.Shell.FLAG_MOUNT_MASTER;
-import static com.topjohnwu.superuser.Shell.FLAG_NON_ROOT_SHELL;
-import static com.topjohnwu.superuser.Shell.ROOT_SHELL;
-import static com.topjohnwu.superuser.Shell.SHELL_CMDS;
+import java.util.List;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public class BuilderImpl extends Shell.Builder {
 
-    boolean hasFlags(int flags) {
-        return (this.flags & flags) == flags;
-    }
-
     @NonNull
     @Override
-    public ShellImpl build() {
-        ShellImpl shell = null;
-
-        // Root mount master
-        if (!hasFlags(FLAG_NON_ROOT_SHELL) && hasFlags(FLAG_MOUNT_MASTER)) {
+    public Shell build() {
+        Context context = Utils.getContext();
+        outer:
+        for (Shell.Factory factory : factories) {
+            Shell shell;
             try {
-                shell = build("su", "--mount-master");
-                if (shell.getStatus() != Shell.ROOT_MOUNT_MASTER)
-                    shell = null;
-            } catch (NoShellException ignore) {}
-        }
-
-        // Normal root shell
-        if (shell == null && !hasFlags(FLAG_NON_ROOT_SHELL)) {
-            try {
-                shell = build("su");
-                if (shell.getStatus() != ROOT_SHELL)
-                    shell = null;
-            } catch (NoShellException ignore) {}
-        }
-
-        // Try user defined shell
-        if (shell == null && SHELL_CMDS != null) {
-            for (String[] shellCmd : Shell.SHELL_CMDS) {
-                if (shellCmd == null) {
-                    continue;
-                }
-                try {
-                    shell = build(shellCmd);
-                    if (!hasFlags(FLAG_NON_ROOT_SHELL) && shell.getStatus() != ROOT_SHELL) {
-                        shell = null;
-                    } else {
-                        return shell;
-                    }
-                } catch (NoShellException ignored) {}
+                shell =  new ShellImpl(timeout, flags, factory.commands());
+            } catch (Throwable e) {
+                exceptionHandler.onException(factory, e);
+                continue;
             }
+            List<Shell.Initializer> initializers = factory.getInitializers();
+            for (Shell.Initializer initializer : initializers) {
+                if (!initializer.onInit(context, shell)) {
+                    continue outer;
+                }
+            }
+            return shell;
         }
-
-        // Try normal non-root shell
-        if (shell == null)
-            shell = build("sh");
-
-        return shell;
+        throw new NoShellException("Unable to create shell!");
     }
 
     @NonNull
     @Override
-    public ShellImpl build(String... commands) {
-        ShellImpl shell;
+    public Shell build(String... commands) {
+        Shell shell;
         try {
             shell = new ShellImpl(timeout, flags, commands);
         } catch (IOException e) {
             Utils.ex(e);
             throw new NoShellException("Unable to create a shell!", e);
-        }
-        if (initClasses != null) {
-            Context ctx = Utils.getContext();
-            for (Class<? extends Shell.Initializer> cls : initClasses) {
-                Shell.Initializer init;
-                try {
-                    Constructor<? extends Shell.Initializer> ic = cls.getDeclaredConstructor();
-                    ic.setAccessible(true);
-                    init = ic.newInstance();
-                } catch (Exception e) {
-                    Utils.err(e);
-                    continue;
-                }
-                if (!init.onInit(ctx, shell)) {
-                    throw new NoShellException("Unable to init shell");
-                }
-            }
         }
         return shell;
     }

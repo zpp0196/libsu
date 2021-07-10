@@ -50,10 +50,15 @@ public class MainActivity extends Activity implements Handler.Callback {
 
     static {
         Shell.enableVerboseLogging = BuildConfig.DEBUG;
-        Shell.setDefaultBuilder(Shell.Builder.create()
-                .setFlags(Shell.FLAG_REDIRECT_STDERR)
+        Shell.Factory suFactory = Shell.Factory.su()
                 // BusyBoxInstaller should come first!
-                .setInitializers(BusyBoxInstaller.class, ExampleInitializer.class)
+                .addInitializer(new BusyBoxInstaller())
+                .addInitializer(new ExampleInitializer());
+        Shell.setDefaultBuilder(Shell.Builder.create(suFactory)
+                .setFlags(Shell.FLAG_REDIRECT_STDERR)
+                .setExceptionHandler((factory, e) ->
+                        Log.d(TAG, String.format("create shell with commands: %s failed",
+                                Arrays.toString(factory.commands())), e))
         );
     }
 

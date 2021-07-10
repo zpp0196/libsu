@@ -25,11 +25,13 @@ import androidx.annotation.Nullable;
 import com.topjohnwu.superuser.internal.BuilderImpl;
 import com.topjohnwu.superuser.internal.MainShell;
 import com.topjohnwu.superuser.internal.UiThreadHandler;
+import com.topjohnwu.superuser.internal.Utils;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -86,16 +88,18 @@ public abstract class Shell implements Closeable {
      * If set, create a non-root shell.
      * <p>
      * Constant value {@value}.
+     * @deprecated use {@link Builder#sh()}
      */
+    @Deprecated
     public static final int FLAG_NON_ROOT_SHELL = (1 << 0);
     /**
      * If set, create a root shell with the {@code --mount-master} option.
      * <p>
      * Constant value {@value}.
+     * @deprecated use {@link Builder#suMountMaster()}
      */
+    @Deprecated
     public static final int FLAG_MOUNT_MASTER = (1 << 1);
-
-    public static String[][] SHELL_CMDS;
 
     /* Preserve (1 << 2) due to historical reasons */
 
@@ -379,6 +383,84 @@ public abstract class Shell implements Closeable {
      * Nested classes
      * ***************/
 
+    public static class StatusInitializer extends Initializer {
+
+        public static final Initializer ROOT_SHELL = create(Shell.ROOT_SHELL);
+        public static final Initializer ROOT_MOUNT_MASTER = create(Shell.ROOT_MOUNT_MASTER);
+        public static final Initializer NON_ROOT_SHELL = create(Shell.NON_ROOT_SHELL);
+
+        public static Initializer create(int status) {
+            return new StatusInitializer(status);
+        }
+
+        private final int status;
+
+        private StatusInitializer(int status) {
+            this.status = status;
+        }
+
+        @Override
+        public boolean onInit(@NonNull Context context, @NonNull Shell shell) {
+            return shell.getStatus() == status;
+        }
+    }
+
+    public static class Factory {
+
+        public interface ExceptionHandler {
+            void onException(Factory factory, Throwable e);
+        }
+
+        public static Factory su() {
+            return create("su", StatusInitializer.ROOT_SHELL);
+        }
+
+        public static Factory suMountMaster() {
+            String[] commands = {"su", "--mount-master"};
+            return create(commands, StatusInitializer.ROOT_MOUNT_MASTER);
+        }
+
+        public static Factory sh() {
+           return create("sh", StatusInitializer.NON_ROOT_SHELL);
+        }
+
+        public static Factory create(String command, Initializer initializer) {
+            return new Factory(command, initializer);
+        }
+
+        public static Factory create(String[] commands, Initializer initializer) {
+            return new Factory(commands, initializer);
+        }
+
+        private final String[] commands;
+        private final List<Initializer> initializers = new ArrayList<>();
+
+        private Factory(String command, Initializer initializer) {
+            this(new String[]{command}, initializer);
+        }
+
+        private Factory(String[] commands, Initializer initializer) {
+            this.commands = commands;
+            addInitializer(initializer);
+        }
+
+        @NonNull
+        public final String[] commands() {
+            return commands;
+        }
+
+        @NonNull
+        public final Factory addInitializer(Initializer initializer) {
+            initializers.add(initializer);
+            return this;
+        }
+
+        @NonNull
+        public final List<Initializer> getInitializers() {
+            return initializers;
+        }
+    }
+
     /**
      * Builder class for {@link Shell} objects.
      * <p>
@@ -386,21 +468,56 @@ public abstract class Shell implements Closeable {
      * {@link #setDefaultBuilder(Builder)}, or directly use a builder object to create new
      * {@link Shell} objects.
      * <p>
-     * Do not subclass this class, use {@link #create()} to get a new Builder object.
+     * Do not subclass this class, use {@link #create(Factory)} to get a new Builder object.
      */
     public abstract static class Builder {
 
         protected int flags = 0;
         protected long timeout = 20;
-        protected Class<? extends Shell.Initializer>[] initClasses = null;
+        protected final List<Factory> factories = new ArrayList<>();
+        protected Factory.ExceptionHandler exceptionHandler = (factory, e) -> Utils.ex(e);
 
         /**
          * Create a new {@link Builder}.
          * @return a new Builder object.
+         * @deprecated use {@link #create(Factory)}
          */
         @NonNull
+        @Deprecated
         public static Builder create() {
-            return new BuilderImpl();
+            throw new UnsupportedOperationException();
+        }
+
+        @NonNull
+        public static Builder create(Factory factory) {
+            return new BuilderImpl().addShell(factory);
+        }
+
+        @NonNull
+        public static Builder su() {
+            return create(Factory.su());
+        }
+
+        @NonNull
+        public static Builder suMountMaster() {
+            return create(Factory.suMountMaster());
+        }
+
+        @NonNull
+        public static Builder sh() {
+            return create(Factory.sh());
+        }
+
+        @NonNull
+        public final Builder addShell(@NonNull Factory factory) {
+            factories.add(factory);
+            return this;
+        }
+
+        @NonNull
+        public final Builder setExceptionHandler(Factory.ExceptionHandler exceptionHandler) {
+            this.exceptionHandler = exceptionHandler;
+            return this;
         }
 
         /**
@@ -408,12 +525,13 @@ public abstract class Shell implements Closeable {
          * @see Initializer
          * @param classes the classes of desired initializers.
          * @return this Builder object for chaining of calls.
+         * @deprecated see {@link Factory#addInitializer(Initializer)}
          */
         @SafeVarargs
         @NonNull
+        @Deprecated
         public final Builder setInitializers(@NonNull Class<? extends Initializer>... classes) {
-            initClasses = classes;
-            return this;
+            throw new UnsupportedOperationException();
         }
 
         /**
@@ -620,7 +738,7 @@ public abstract class Shell implements Closeable {
      * <p>
      * This is an advanced feature. If you need to run specific operations when a new {@code Shell}
      * is constructed, extend this class, add your own implementation, and register it with
-     * {@link Builder#setInitializers(Class[])}.
+     * {@link Factory#addInitializer(Initializer)}
      * The concept is similar to {@code .bashrc}: run specific scripts/commands when the shell
      * starts up. {@link #onInit(Context, Shell)} will be called as soon as the shell is
      * constructed and tested as a valid shell.

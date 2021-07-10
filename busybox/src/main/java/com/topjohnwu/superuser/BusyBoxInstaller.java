@@ -39,7 +39,7 @@ import static com.topjohnwu.superuser.ShellUtils.fastCmdResult;
  * restrictions, and at the same time workaround issues on older Samsung devices.
  * Using this initializer handles all of that for you.
  * <p>
- * Register this class with {@link Shell.Builder#setInitializers(Class[])} to let {@code libsu}
+ * Register this class with {@link Shell.Factory#addInitializer(Shell.Initializer)} to let {@code libsu}
  * install and setup the shell to use the bundled BusyBox binary.
  * <p>
  * After the initializer is run, the shell will be using BusyBox's "Standalone Mode ASH".
