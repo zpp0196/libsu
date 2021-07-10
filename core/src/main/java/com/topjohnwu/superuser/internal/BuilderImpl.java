@@ -96,7 +96,6 @@ public class BuilderImpl extends Shell.Builder {
             Utils.ex(e);
             throw new NoShellException("Unable to create a shell!", e);
         }
-        MainShell.set(shell);
         if (initClasses != null) {
             Context ctx = Utils.getContext();
             for (Class<? extends Shell.Initializer> cls : initClasses) {
@@ -110,7 +109,6 @@ public class BuilderImpl extends Shell.Builder {
                     continue;
                 }
                 if (!init.onInit(ctx, shell)) {
-                    MainShell.set(null);
                     throw new NoShellException("Unable to init shell");
                 }
             }

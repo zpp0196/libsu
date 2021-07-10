@@ -41,6 +41,7 @@ public final class MainShell {
         if (shell == null) {
             isInitMain = true;
             shell = getBuilder().build();
+            MainShell.set(shell);
             isInitMain = false;
         }
         return shell;
@@ -61,6 +62,7 @@ public final class MainShell {
                     synchronized (MainShell.class) {
                         isInitMain = true;
                         s = getBuilder().build();
+                        MainShell.set(s);
                         isInitMain = false;
                     }
                 } catch (NoShellException e) {
