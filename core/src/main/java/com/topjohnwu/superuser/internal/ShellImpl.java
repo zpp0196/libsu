@@ -55,6 +55,7 @@ class ShellImpl extends Shell {
 
     private final ExecutorService executor;
     private final String[] commands;
+    private int pid;
     private final Process process;
     private final NoCloseOutputStream STDIN;
     private final NoCloseInputStream STDOUT;
@@ -146,6 +147,13 @@ class ShellImpl extends Shell {
             String s = br.readLine();
             if (TextUtils.isEmpty(s) || !s.contains("SHELL_TEST"))
                 throw new IOException("Created process is not a shell");
+
+            STDIN.write((("echo $$\n").getBytes(UTF_8)));
+            STDIN.flush();
+            s = br.readLine();
+            if (TextUtils.isEmpty(s) || (pid = Integer.parseInt(s)) <= 0)
+                throw new IOException("Get process pid error");
+
             int status = NON_ROOT_SHELL;
 
             STDIN.write(("id\n").getBytes(UTF_8));
@@ -195,6 +203,11 @@ class ShellImpl extends Shell {
     @Override
     public String[] getCommands() {
         return commands;
+    }
+
+    @Override
+    public int getPid() {
+        return pid;
     }
 
     @Override

@@ -331,6 +331,8 @@ public abstract class Shell implements Closeable {
 
     public abstract String[] getCommands();
 
+    public abstract int getPid();
+
     /**
      * Get the status of the shell.
      * @return the status of the shell.
