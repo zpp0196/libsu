@@ -23,19 +23,19 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 dependencies {
-    def libsuVersion = '3.1.2.p1'
+    def libsuVersion = '3.1.2.p2'
 
     // The core module is used by all other components
-    implementation "com.github.topjohnwu.libsu:core:${libsuVersion}"
+    implementation "com.github.zpp0196.libsu:core:${libsuVersion}"
 
     // Optional: APIs for creating root services
-    implementation "com.github.topjohnwu.libsu:service:${libsuVersion}"
+    implementation "com.github.zpp0196.libsu:service:${libsuVersion}"
 
     // Optional: For com.topjohnwu.superuser.io classes
-    implementation "com.github.topjohnwu.libsu:io:${libsuVersion}"
+    implementation "com.github.zpp0196.libsu:io:${libsuVersion}"
 
     // Optional: Bundle prebuilt BusyBox binaries
-    implementation "com.github.topjohnwu.libsu:busybox:${libsuVersion}"
+    implementation "com.github.zpp0196.libsu:busybox:${libsuVersion}"
 }
 ```
 
@@ -51,7 +51,7 @@ public class SplashActivity extends Activity {
     static {
         // Set settings before the main shell can be created
         Shell.enableVerboseLogging = BuildConfig.DEBUG;
-        Shell.setDefaultBuilder(Shell.Builder.create()
+        Shell.setDefaultBuilder(Shell.Builder.su()
             .setFlags(Shell.FLAG_REDIRECT_STDERR)
             .setTimeout(10)
         );
@@ -128,8 +128,10 @@ public class ExampleInitializer extends Shell.Initializer {
         return true;  // Return false to indicate initialization failed
     }
 }
-Shell.Builder builder = /* Create a shell builder */ ;
-builder.setInitializers(ExampleInitializer.class);
+Shell.Factory suFactory = Shell.Factory.su() /* Create a shell factory with su */
+    // Set BusyBoxInstaller as the first initializer
+    .addInitializer(new ExampleInitializer());
+Shell.setDefaultBuilder(Shell.Builder.create(suFactory));
 ```
 
 ### I/O
@@ -178,9 +180,10 @@ If the application process creating the root service has a debugger attached, th
 If you want to embed BusyBox directly in your app to ensure 100% reliable/reproducible shell environment, add `com.github.topjohnwu.libsu:busybox` as a dependency (`android:extractNativeLibs=false` is **NOT** compatible with the `busybox` module):
 
 ```java
-Shell.Builder builder = /* Create a shell builder */ ;
-// Set BusyBoxInstaller as the first initializer
-builder.setInitializers(BusyBoxInstaller.class, /* other initializers */);
+Shell.Factory suFactory = Shell.Factory.su() /* Create a shell factory with su */
+    // Set BusyBoxInstaller as the first initializer
+    .addInitializer(new BusyBoxInstaller());
+Shell.setDefaultBuilder(Shell.Builder.create(suFactory));
 ```
 
 The BusyBox binaries are statically linked, feature complete, and includes full SElinux support. As a result they are pretty large in size (1.3 - 2.1 MB for each ABI). To reduce APK size, the best option is to use either [App Bundles](https://developer.android.com/guide/app-bundle) or [Split APKs](https://developer.android.com/studio/build/configure-apk-splits).

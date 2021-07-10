@@ -1,3 +1,13 @@
+## 3.1.2.p2
+
+### New Features
+
+- Allow user to create custom shells
+
+### Bug fixes
+
+- ClassCastException when setBuilder called
+
 ## 3.1.2.p1
 
 ### New Features
