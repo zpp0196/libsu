@@ -1,6 +1,6 @@
 # libsu
 
-[![](https://jitpack.io/v/topjohnwu/libsu.svg)](https://jitpack.io/#topjohnwu/libsu)
+[![](https://jitpack.io/v/zpp0196/libsu.svg)](https://jitpack.io/#zpp0196/libsu)
 
 An Android library providing a complete solution for apps using root permissions.
 
