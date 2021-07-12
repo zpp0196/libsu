@@ -1,3 +1,9 @@
+## 3.1.2.p3
+
+### New Features
+
+- Add more shell api
+
 ## 3.1.2.p2
 
 ### New Features

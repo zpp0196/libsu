@@ -23,7 +23,7 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 dependencies {
-    def libsuVersion = '3.1.2.p2'
+    def libsuVersion = '3.1.2.p3'
 
     // The core module is used by all other components
     implementation "com.github.zpp0196.libsu:core:${libsuVersion}"
