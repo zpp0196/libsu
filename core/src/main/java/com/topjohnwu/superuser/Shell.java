@@ -331,6 +331,8 @@ public abstract class Shell implements Closeable {
 
     public abstract String[] getCommands();
 
+    public abstract Factory getFactory();
+
     public abstract int getPid();
 
     /**
@@ -414,7 +416,7 @@ public abstract class Shell implements Closeable {
         }
 
         public static Factory su() {
-            return create("su", StatusInitializer.ROOT_SHELL);
+            return rooShell("su");
         }
 
         public static Factory suMountMaster() {
@@ -426,24 +428,27 @@ public abstract class Shell implements Closeable {
            return create("sh", StatusInitializer.NON_ROOT_SHELL);
         }
 
+        public static Factory rooShell(String... commands) {
+            return create(commands, StatusInitializer.ROOT_SHELL);
+        }
+
+        public static Factory create(String... commands) {
+            return new Factory(commands);
+        }
+
         public static Factory create(String command, Initializer initializer) {
-            return new Factory(command, initializer);
+            return new Factory(command).addInitializer(initializer);
         }
 
         public static Factory create(String[] commands, Initializer initializer) {
-            return new Factory(commands, initializer);
+            return new Factory(commands).addInitializer(initializer);
         }
 
         private final String[] commands;
         private final List<Initializer> initializers = new ArrayList<>();
 
-        private Factory(String command, Initializer initializer) {
-            this(new String[]{command}, initializer);
-        }
-
-        private Factory(String[] commands, Initializer initializer) {
+        private Factory(String... commands) {
             this.commands = commands;
-            addInitializer(initializer);
         }
 
         @NonNull
@@ -491,8 +496,13 @@ public abstract class Shell implements Closeable {
         }
 
         @NonNull
+        public static Builder def() {
+            return MainShell.getBuilder();
+        }
+
+        @NonNull
         public static Builder create(Factory factory) {
-            return new BuilderImpl().addShell(factory);
+            return new BuilderImpl(factory);
         }
 
         @NonNull

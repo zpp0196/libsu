@@ -54,7 +54,7 @@ class ShellImpl extends Shell {
     private int status;
 
     private final ExecutorService executor;
-    private final String[] commands;
+    private final Factory factory;
     private int pid;
     private final Process process;
     private final NoCloseOutputStream STDIN;
@@ -96,10 +96,11 @@ class ShellImpl extends Shell {
         }
     }
 
-    ShellImpl(long timeout, int flags, String... cmd) throws IOException {
+    ShellImpl(long timeout, int flags, Factory factory) throws IOException {
         super(flags);
+        final String[] cmd = factory.commands();
         status = UNKNOWN;
-        this.commands = cmd;
+        this.factory = factory;
 
         Utils.log(TAG, "exec " + TextUtils.join(" ", cmd));
         process = Runtime.getRuntime().exec(cmd);
@@ -202,7 +203,13 @@ class ShellImpl extends Shell {
 
     @Override
     public String[] getCommands() {
-        return commands;
+        return factory.commands();
+    }
+
+    @Nullable
+    @Override
+    public Factory getFactory() {
+        return factory;
     }
 
     @Override

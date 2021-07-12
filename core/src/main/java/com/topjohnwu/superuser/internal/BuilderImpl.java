@@ -30,6 +30,10 @@ import java.util.List;
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public class BuilderImpl extends Shell.Builder {
 
+    public BuilderImpl(Shell.Factory factory) {
+        addShell(factory);
+    }
+
     @NonNull
     @Override
     public Shell build() {
@@ -38,7 +42,7 @@ public class BuilderImpl extends Shell.Builder {
         for (Shell.Factory factory : factories) {
             Shell shell;
             try {
-                shell =  new ShellImpl(timeout, flags, factory.commands());
+                shell = new ShellImpl(timeout, flags, factory);
             } catch (Throwable e) {
                 exceptionHandler.onException(factory, e);
                 continue;
@@ -59,7 +63,7 @@ public class BuilderImpl extends Shell.Builder {
     public Shell build(String... commands) {
         Shell shell;
         try {
-            shell = new ShellImpl(timeout, flags, commands);
+            shell = new ShellImpl(timeout, flags, Shell.Factory.create(commands));
         } catch (IOException e) {
             Utils.ex(e);
             throw new NoShellException("Unable to create a shell!", e);

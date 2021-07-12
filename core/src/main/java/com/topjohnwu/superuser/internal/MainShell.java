@@ -92,9 +92,9 @@ public final class MainShell {
         defaultBuilder = builder;
     }
 
-    private static Shell.Builder getBuilder() {
+    public static Shell.Builder getBuilder() {
         if (defaultBuilder == null)
-            defaultBuilder = new BuilderImpl();
+            defaultBuilder = Shell.Builder.su();
         return defaultBuilder;
     }
 
